@@ -19,7 +19,7 @@ class BillingController extends Controller
             'client_name' => 'required|max:225',
             'client_phone' => 'required|numeric',
             'group_id' => 'required', // 1,2 or 3
-            'number_of_months' => 'required|numeric',
+            'number_of_months' => 'required|numeric', // 1,3,6 or 12
             'total_payment_amount' => 'required|numeric',
         ]);
         if ($validator->fails()) {
