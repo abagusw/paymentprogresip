@@ -142,9 +142,9 @@ class BillingController extends Controller
         $invoice_data = [
             "external_invoice_id" => 'I'.uniqid(),
             "client_id" => $client_id,
-            "amount" => $request_data->total_payment_amount,
-            "group_id" => $request_data->group_id,
-            "number_of_months" => $request_data->number_of_months,
+            "amount" => $request_data['total_payment_amount'],
+            "group_id" => $request_data['group_id'],
+            "number_of_months" => $request_data['number_of_months'],
         ];
         $invoice_id = Invoices::insertGetId($invoice_data)->first();
         if ($invoice_id) {
