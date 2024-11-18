@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($response->status)) {
         if ($response->status == 'Success') {
             $message = 'Your payment has been created, click this link to complete your payment
-            <a href="'.$response->data->payment_xendit_url.'" target="_blank">'.$response->data->payment_xendit_url.'</a>';
+            <a href="'.$response->data->xendit_invoice_url.'" target="_blank">'.$response->data->xendit_invoice_url.'</a>';
             $submessage = 'Please complete your transaction before '.$response->data->payment_xendit_expired;
         } else {
             $message = $response->message;
@@ -162,7 +162,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             count--;
             console.log(count);
             if (count == 0) {
-                window.location.replace('<?php echo $response->data->payment_xendit_url ?>');
+                window.location.replace('<?php echo $response->data->xendit_invoice_url ?>');
             }
             document.getElementById("countdown").innerHTML = count;
         }, 1000);
