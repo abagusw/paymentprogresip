@@ -22,13 +22,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $headers[] = "Content-Type: application/json";
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($curl, CURLOPT_URL, 'https//::payment.progresip.id/api/billing');
+    curl_setopt($curl, CURLOPT_URL, 'https://payment.progresip.id/api/billing');
     curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
     curl_setopt($curl, CURLOPT_POSTFIELDS, $payload);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
     $response = curl_exec($curl);
 
     curl_close($curl);
+    echo json_encode($response);
     $message = '';
     $submessage = '';
     $response = json_decode($response);

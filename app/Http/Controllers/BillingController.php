@@ -12,6 +12,13 @@ use Validator;
 class BillingController extends Controller
 {   
 
+    public function index() {
+        echo json_encode([
+            "success" => true,
+            "message" => "API Okay"
+        ]);
+    }
+
     public function ProcessPayment(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -200,7 +207,7 @@ class BillingController extends Controller
                 'failure_redirect_url' => $failure_redirect_url,
                 'currency' => 'IDR'
               ];
-              
+              echo "ERROR TRACK";
             $createInvoice = \Xendit\Invoice::create($params);
             if ($createInvoice['id']) {
                 $data = array(

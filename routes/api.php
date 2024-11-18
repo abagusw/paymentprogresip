@@ -14,6 +14,7 @@ use App\Http\Controllers\PaymentController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+Route::get('/', [BillingController::class, 'index']);
 
 Route::post('billing', [BillingController::class, 'ProcessPayment']);
 
