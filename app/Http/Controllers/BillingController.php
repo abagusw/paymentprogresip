@@ -146,7 +146,7 @@ class BillingController extends Controller
             "group_id" => $request_data['group_id'],
             "number_of_months" => $request_data['number_of_months'],
         ];
-        $invoice_id = Invoices::insertGetId($invoice_data)->first();
+        $invoice_id = Invoices::insertGetId($invoice_data);
         if ($invoice_id) {
             $client = Clients::where('client_id', $client_id)->first();  
             $setting_xnd_success_redirect_url = Settings::where('setting_key', 'xnd_success_redirect_url_api')->first();
