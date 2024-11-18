@@ -36,10 +36,10 @@ class WebhookController extends Controller
             $status = $data['status'];
             $external_id = $data['external_id'];
 
-            Invoices::where('external_id', $external_id)->update([
+            Invoices::where('external_invoice_id', $external_id)->update([
                 'xendit_invoice_status' => $status
             ]);
-            $invoice = Invoices::where('external_id', $external_id)->first();
+            $invoice = Invoices::where('external_invoice_id', $external_id)->first();
             if (!$invoice) {
                 return response()->json(['success'=>false, 'message'=>'Invoice reference id not found']);
             }
