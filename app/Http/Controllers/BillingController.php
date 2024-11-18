@@ -208,7 +208,7 @@ class BillingController extends Controller
                 'failure_redirect_url' => $failure_redirect_url,
                 'currency' => 'IDR'
               ];
-              echo "ERROR TRACK";
+
             $createInvoice = \Xendit\Invoice::create($params);
             if ($createInvoice['id']) {
                 $data = array(
