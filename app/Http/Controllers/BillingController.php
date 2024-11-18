@@ -17,7 +17,7 @@ class BillingController extends Controller
         $validator = Validator::make($request->all(), [
             'client_email' => 'required|max:225|email',
             'client_name' => 'required|max:225',
-            'client_phone' => 'required|numeric',
+            'client_phone' => 'required',
             'group_id' => 'required', // 1,2 or 3
             'number_of_months' => 'required|numeric', // 1,3,6 or 12
             'total_payment_amount' => 'required|numeric',
@@ -27,8 +27,6 @@ class BillingController extends Controller
         }
         $request_data = $request->all();
         
-        date_default_timezone_set('Asia/Jakarta');
-        $datetimenow = date('Y-m-d H:i:s');
         $client_email = $request_data['client_email'];
         $client = Clients::where('client_email', $client_email)->first();
         $client_data = $request_data;
