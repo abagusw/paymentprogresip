@@ -29,16 +29,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $response = curl_exec($curl);
 
     curl_close($curl);
-    echo json_encode($response);
+
     $message = '';
     $submessage = '';
     $response = json_decode($response);
-    if ($response->status == 'Success') {
-        $message = 'Your payment has been created, click this link to complete your payment
-        <a href="'.$response->data->payment_xendit_url.'" target="_blank">'.$response->data->payment_xendit_url.'</a>';
-        $submessage = 'Please complete your transaction before '.$response->data->payment_xendit_expired;
-    } else {
-        $message = $response->message;
+    if (isset($response->status)) {
+        if ($response->status == 'Success') {
+            $message = 'Your payment has been created, click this link to complete your payment
+            <a href="'.$response->data->payment_xendit_url.'" target="_blank">'.$response->data->payment_xendit_url.'</a>';
+            $submessage = 'Please complete your transaction before '.$response->data->payment_xendit_expired;
+        } else {
+            $message = $response->message;
+        }
+    } else {        
+        echo json_encode($response);
+        $message = "Pembelian gagal, silahkan hubungi admin!";
     }
 }
 ?>
@@ -101,8 +106,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="total_payment_amount">Total Payment Amount</label>
-                        <input type="text" class="form-control" id="total_payment_amount" name="total_payment_amount" disabled />
+                        <label for="total_payment_amount_display">Total Payment Amount</label>
+                        <input type="text" class="form-control" id="total_payment_amount_display" name="total_payment_amount_display" readonly />
+                        <input type="hidden" id="total_payment_amount" name="total_payment_amount" value="0"/>
                     </div>
                     <button type="submit" class="btn btn-primary" id="submitTransaction">Submit</button>
                 </div>
@@ -138,11 +144,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     break;
             }
             var total_payment_amount = amount * number_of_months;
+            $("#total_payment_amount").val(total_payment_amount);
             total_payment_amount_formated = total_payment_amount.toLocaleString('id-ID', {
                 style: 'currency',
                 currency: 'IDR'
             });
-            $("#total_payment_amount").val(total_payment_amount_formated);
+            $("#total_payment_amount_display").val(total_payment_amount_formated);
         }
         $(document).ready(function (e) {
             calculateTotalPaymentAmount();
