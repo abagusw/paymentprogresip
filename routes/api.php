@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BillingController;
-use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\WebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,5 +19,5 @@ Route::get('/', [BillingController::class, 'index']);
 Route::post('billing', [BillingController::class, 'ProcessPayment']);
 
 Route::prefix('payment')->group(function () {
-    Route::post('/callback', [PaymentController::class, 'CallbackInvoice']);
+    Route::post('/callback', [WebhookController::class, 'CallbackInvoice']);
 });
