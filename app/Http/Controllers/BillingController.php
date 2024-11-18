@@ -36,11 +36,12 @@ class BillingController extends Controller
         
         $client_email = $request_data['client_email'];
         $client = Clients::where('client_email', $client_email)->first();
-        $client_data = $request_data;
-        unset($client_data['number_of_months']);
-        unset($client_data['group_id']);
-        unset($client_data['total_payment_amount']);
-        $client_data['external_client_id'] = 'C'.uniqid();
+        $client_data = [
+            "external_client_id" => 'C'.uniqid(),
+            "client_email" => $request_data["client_email"],
+            "client_name" => $request_data["client_name"],
+            "client_phone" => $request_data["client_phone"],
+        ];
         $client_id = null;
         if ($client != null) {
             Clients::where('client_email',$client_email)->update($client_data);
