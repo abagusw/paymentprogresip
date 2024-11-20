@@ -25,6 +25,7 @@ class BillingController extends Controller
             'client_email' => 'required|max:225|email',
             'client_name' => 'required|max:225',
             'client_phone' => 'required',
+            'client_address' => 'required',
             'group_id' => 'required', // 1,2 or 3
             'number_of_months' => 'required|numeric', // 1,3,6 or 12
             'total_payment_amount' => 'required|numeric',
@@ -41,6 +42,7 @@ class BillingController extends Controller
             "client_email" => $request_data["client_email"],
             "client_name" => $request_data["client_name"],
             "client_phone" => $request_data["client_phone"],
+            "client_address" => $request_data["client_address"],
         ];
         $client_id = null;
         if ($client != null) {
@@ -80,7 +82,7 @@ class BillingController extends Controller
             "phone_number" => $client_phone,
             "addresses" => [
                 [
-                    "street_line1" => 'Default System',
+                    "street_line1" => $client->client_address,
                     "street_line2" => 'Default System',
                     "city" => 'Default System',
                     "province_state" => 'Default System',

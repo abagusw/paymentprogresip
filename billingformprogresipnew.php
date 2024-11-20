@@ -89,6 +89,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <input type="text" class="form-control" id="client_phone" name="client_phone" placeholder="Phone" required />
                     </div>
                     <div class="form-group">
+                        <label for="client_address">Alamat</label>
+                        <textarea type="text" class="form-control" id="client_address" name="client_address" placeholder="Alamat" required ></textarea>
+                    </div>
+                    <div class="form-group">
                         <label for="group_id">Sekutu Progresip</label>
                         <select class="form-control" id="group_id" name="group_id" required>
                             <option value="1" selected>Prekariat</option>
