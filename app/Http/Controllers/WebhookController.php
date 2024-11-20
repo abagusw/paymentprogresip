@@ -29,6 +29,25 @@ class WebhookController extends Controller
         return false;
     }
 
+    public function UpdateClientSubscription($active, $client_id, $subscribed_start = null, $subscribed_end = null) {
+        
+        if ($active) {
+            Clients::where('client_id', $client_id)->update(
+                    [
+                        'subscribed_start' => $subscribed_start,
+                        'subscribed_end' => $subscribed_end,
+                        'subscribed_status' => 1
+                    ]
+                );
+        } else { 
+            Clients::where('client_id', $client_id)->update(
+                    [
+                        'subscribed_status' => 0
+                    ]
+                );
+        }
+    }
+
     public function CallbackInvoice()
     {
         $verified = $this->VerifyWebhookToken();
@@ -52,19 +71,9 @@ class WebhookController extends Controller
                 $date_end = strtotime("+" . $invoice->number_of_months . " month", $data['paid_at']);
                 $subscribed_start = date('Y-m-d H:i:s', $date_paid);
                 $subscribed_end = date('Y-m-d H:i:s', $date_end);
-                Clients::where('client_id', $invoice->client_id)->update(
-                        [
-                            'subscribed_start' => $subscribed_start,
-                            'subscribed_end' => $subscribed_end,
-                            'subscribed_status' => 1
-                        ]
-                    );
-            } else if ($status == 'EXPIRED'){ 
-                Clients::where('client_id', $invoice->client_id)->update(
-                        [
-                            'subscribed_status' => 0
-                        ]
-                    );
+                $this->UpdateClientSubscription(true, $invoice->client_id, $subscribed_start, $subscribed_end);
+            } else if ($status == 'EXPIRED') { 
+                $this->UpdateClientSubscription(false, $invoice->client_id);
             }
             return response()->json(['success'=>true, 'message'=>'Update invoice success', 'data' => $data]);
         } else {
@@ -96,8 +105,42 @@ class WebhookController extends Controller
                     'xnd_recurring_plan_status'=>$status
                 ]
             );
+            
+            switch ($event) {
+                case 'recurring.plan.activated':
+                    break;
+                
+                case 'recurring.plan.inactivated':          
+                    $this->UpdateClientSubscription(false, $invoice_recurring->client_id);
+                    break;    
 
-            return response()->json(['success'=>true, 'message'=>'Update invoice success', 'data' => $data]);
+                case 'recurring.cycle.retrying':    
+                    break;
+
+                case 'recurring.cycle.failed': 
+                    if ($data['attempt_count'] == 2) {
+                    }
+                    break;    
+                
+                case 'recurring.cycle.created': // store the next payment, save the cycle id only
+                    InvoicesRecurring::where('external_invoice_recurring_id', $reference_id)->update([
+                        'xnd_recurring_cycle_id' => $data['id']
+                    ]);
+                    break;
+
+                case 'recurring.cycle.succeeded':
+                    $date_paid = strtotime($data['scheduled_timestamp']);
+                    $date_end = strtotime("+" . $invoice_recurring->number_of_months . " month", $data['scheduled_timestamp']);
+                    $subscribed_start = date('Y-m-d H:i:s', $date_paid);
+                    $subscribed_end = date('Y-m-d H:i:s', $date_end);
+                    $this->UpdateClientSubscription(true, $invoice_recurring->client_id, $subscribed_start, $subscribed_end);
+                    break;
+                
+                default:
+                    break;
+            }
+
+            return response()->json(['success'=>true, 'message'=>'Update invoice recurring success', 'data' => $data]);
         } else {
             return response()->json(['success'=>false, 'message'=>'Token not match']);
         }
