@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Clients;
 use App\Models\Invoices;
+use App\Models\InvoicesRecurring;
 use App\Models\Settings;
 use Xendit\Xendit;
 use Illuminate\Http\Request;
@@ -19,6 +20,21 @@ class BillingController extends Controller
         ]);
     }
 
+    public function LoadXenditSetting(): array {
+        
+        $setting_key = Settings::where('setting_key', 'xnd_api_key_development_billing_api')->first();
+        $setting_xnd_success_redirect_url = Settings::where('setting_key', 'xnd_success_redirect_url_api')->first();
+        $setting_xnd_failure_redirect_url = Settings::where('setting_key', 'xnd_failure_redirect_url_api')->first();
+        $xendit_secret_key_billing = $setting_key->value_text;
+        $success_redirect_url = $setting_xnd_success_redirect_url->value_text;
+        $failure_redirect_url = $setting_xnd_failure_redirect_url->value_text;
+        return [
+            "xendit_secret_key_billing" => $xendit_secret_key_billing,
+            "success_redirect_url" => $success_redirect_url,
+            "failure_redirect_url" => $failure_redirect_url,
+        ];
+    }
+
     public function ProcessPayment(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -29,12 +45,15 @@ class BillingController extends Controller
             'group_id' => 'required', // 1,2 or 3
             'number_of_months' => 'required|numeric', // 1,3,6 or 12
             'total_payment_amount' => 'required|numeric',
+            'is_recurring' => 'max:225',
         ]);
         if ($validator->fails()) {
             return response()->json(['status' => 'Failed', 'message' => $validator->messages()->first()]);
         }
         $request_data = $request->all();
         
+        $is_recurring = $request_data['is_recurring'] == 'Y';
+
         $client_email = $request_data['client_email'];
         $client = Clients::where('client_email', $client_email)->first();
         $client_data = [
@@ -52,20 +71,25 @@ class BillingController extends Controller
             $client_id = Clients::insertGetId($client_data);
         }   
 
-        $setting_key = Settings::where('setting_key', 'xnd_api_key_development_billing_api')->first();
-        $xendit_secret_key_billing = $setting_key->value_text;
-        Xendit::setApiKey($xendit_secret_key_billing);
+        $xset = $this->LoadXenditSetting();
 
-        $this->SyncClientXendit($client_id, $xendit_secret_key_billing); // sync xendit client
+        $this->SyncClientXendit($client_id, $xset); // sync xendit client
 
-        $responsexnd = $this->CreateInvoice($client_id, $request_data); //create xendit invoice
-        if ($responsexnd['success'] == false) {
-            return response()->json(['status' => 'Failed', 'message' => $responsexnd['message']]);
+        if ($is_recurring) {
+            $responsexnd = $this->CreateRecurringPlanXendit($client_id, $request_data, $xset); //create xendit recurring
+            if ($responsexnd['success'] == false) {
+                return response()->json(['status' => 'Failed', 'message' => $responsexnd['message'], 'data' => $responsexnd['data']]);
+            }
+        } else {
+            $responsexnd = $this->CreateInvoice($client_id, $request_data, $xset); //create xendit invoice
+            if ($responsexnd['success'] == false) {
+                return response()->json(['status' => 'Failed', 'message' => $responsexnd['message']]);
+            }
         }
         return response()->json(['status' => 'Success', 'message' => 'billing has created successfully', 'data'=>$responsexnd['data']]);
     }
 
-    public function SyncClientXendit($client_id, $xendit_secret_key)
+    public function SyncClientXendit($client_id, $xset)
     {
         $client = Clients::where('client_id', $client_id)->first();
         $client_phone = substr_replace($client->client_phone, "+62", 0, 1);
@@ -110,6 +134,7 @@ class BillingController extends Controller
             ];
     
         if (!$client->client_xendit_cusid) { // create xendit customer
+            Xendit::setApiKey($xset["xendit_secret_key_billing"]);
             $createCustomer = \Xendit\Customers::createCustomer($data);
             if ($createCustomer['id']) {
                 Clients::where('client_id', $client_id)->update([
@@ -117,7 +142,7 @@ class BillingController extends Controller
                 ]);
             }
         } else { // update xendit customer
-            $apiKey = $xendit_secret_key;
+            $apiKey = $xset["xendit_secret_key_billing"];
             $url = "https://api.xendit.co/customers/".$client->client_xendit_cusid;
             $headers = [];
             $headers[] = "Content-Type: application/json";
@@ -137,7 +162,7 @@ class BillingController extends Controller
         }
     }
     
-    public function CreateInvoice($client_id, $request_data) {
+    public function CreateInvoice($client_id, $request_data, $xset) {
         $success = true;
         $message = '';
         $data = array();
@@ -151,10 +176,6 @@ class BillingController extends Controller
         $invoice_id = Invoices::insertGetId($invoice_data);
         if ($invoice_id) {
             $client = Clients::where('client_id', $client_id)->first();  
-            $setting_xnd_success_redirect_url = Settings::where('setting_key', 'xnd_success_redirect_url_api')->first();
-            $setting_xnd_failure_redirect_url = Settings::where('setting_key', 'xnd_failure_redirect_url_api')->first();
-            $success_redirect_url = $setting_xnd_success_redirect_url->value_text;
-            $failure_redirect_url = $setting_xnd_failure_redirect_url->value_text;
             
             $invoice = Invoices::where("invoice_id", $invoice_id)->first();
             $client_phone = substr_replace($client->client_phone, "+62", 0, 1);
@@ -206,30 +227,138 @@ class BillingController extends Controller
                         'viber'
                     ]
                 ],
-                'success_redirect_url' => $success_redirect_url,
-                'failure_redirect_url' => $failure_redirect_url,
+                'success_redirect_url' => $xset["success_redirect_url"],
+                'failure_redirect_url' => $xset["failure_redirect_url"],
                 'currency' => 'IDR'
               ];
 
+            Xendit::setApiKey($xset["xendit_secret_key_billing"]);
             $createInvoice = \Xendit\Invoice::create($params);
             if ($createInvoice['id']) {
-                $data = array(
-                        'xendit_invoice_id' => $createInvoice['id'],
-                        'xendit_invoice_status' => $createInvoice['status'],
-                        'xendit_invoice_url' => $createInvoice['invoice_url'],
-                        'xendit_invoice_expired' => date('Y-m-d H:i:s', strtotime($createInvoice['expiry_date'])),
-                    );
+                $data = [
+                    'xendit_invoice_id' => $createInvoice['id'],
+                    'xendit_invoice_status' => $createInvoice['status'],
+                    'xendit_invoice_url' => $createInvoice['invoice_url'],
+                    'xendit_invoice_expired' => date('Y-m-d H:i:s', strtotime($createInvoice['expiry_date'])),
+                ];
                 Invoices::where('invoice_id', $invoice_id)->update($data);
             } else {                
                 $success = false;
-                $message = 'Cannot create xendit payment';
+                $message = 'Cannot create xendit invoice';
             }
         } else {
             $success = false;
-            $message = 'Invalid payment method';
+            $message = 'Cannot create invoice';
         }
 
         return ['success'=> $success, 'message'=> $message, 'data' => $data];
     }
 
+    public function CreateRecurringPlanXendit($client_id, $request_data, $xset) {
+        $success = true;
+        $message = '';
+        $data = array();
+        $interval = "MONTH";
+        $invoice_data = [
+            "external_invoice_recurring_id" => 'IR'.uniqid(),
+            "external_invoice_schedule_id" => 'IRS'.uniqid(),
+            "client_id" => $client_id,
+            "amount" => $request_data['total_payment_amount'],
+            "group_id" => $request_data['group_id'],
+            "number_of_months" => $request_data['number_of_months'],
+        ];
+        $invoice_recurring_id = InvoicesRecurring::insertGetId($invoice_data);
+        
+        if ($invoice_recurring_id) {
+            date_default_timezone_set('Asia/Jakarta');
+            $datetimenow = date('Y-m-d H:i:s');
+            $datetimenow_spt = explode(' ', $datetimenow);
+            $datenow = $datetimenow_spt[0];
+            $timenow = $datetimenow_spt[1];
+            $anchor_date = $datenow . 'T' . $timenow . 'Z';
+            $client = Clients::where('client_id', $client_id)->first(); 
+            
+            $invoice_recurring = InvoicesRecurring::where("invoice_recurring_id", $invoice_recurring_id)->first();
+
+            $data = [
+                    "reference_id" => $invoice_recurring->external_invoice_recurring_id,
+                    "customer_id" => $client->client_xendit_cusid,
+                    "recurring_action" => "PAYMENT",
+                    "currency" => "IDR",
+                    "amount" => $invoice_recurring->amount,
+                    "payment_methods" => [],
+                    "schedule" => [
+                      "reference_id" => $invoice_recurring->external_invoice_schedule_id,
+                      "interval" => $interval,
+                      "interval_count" => (int) $invoice_recurring->number_of_months,
+                      "total_recurrence" => 12,
+                      "anchor_date" => $anchor_date,
+                      "retry_interval" => "DAY",
+                      "retry_interval_count" => 2,
+                      "total_retry" => 2,
+                      "failed_attempt_notifications" => [1,2]
+                    ],
+                    "immediate_action_type" => "FULL_AMOUNT",
+                    "notification_config" => [
+                      "recurring_created" => ["WHATSAPP","EMAIL"],
+                      "recurring_succeeded" => ["WHATSAPP","EMAIL"],
+                      "recurring_failed" => ["WHATSAPP","EMAIL"],
+                      "locale" => "en"],
+                    "failed_cycle_action" => "STOP",
+                    "payment_link_for_failed_attempt" => false,
+                    "metadata" => null,
+                    "description" => "Kawan M",
+                    "items" => [
+                          [
+                              "type" => 'DIGITAL_PRODUCT',
+                              "name" => 'GROUP - ' . $invoice_recurring->group_id,
+                              "net_unit_amount" => $invoice_recurring->amount,
+                              "quantity" =>  '1',
+                              "url" => $xset["success_redirect_url"],
+                              "category" => "Newsletter",
+                              "subcategory" => "Newsletter"
+                          ]
+                      ],
+                    "success_return_url" => $xset["success_redirect_url"],
+                    "failure_return_url" => $xset["failure_redirect_url"]
+                    ];
+            $apiKey = $xset["xendit_secret_key_billing"];
+            $url = "https://api.xendit.co/recurring/plans";
+            $headers = [];
+            $headers[] = "Content-Type: application/json";
+          
+            $curl = curl_init();
+
+            $payload = json_encode($data);
+            curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($curl, CURLOPT_USERPWD, $apiKey.":");
+            curl_setopt($curl, CURLOPT_URL, $url);
+            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+          
+            $curl_result = curl_exec($curl);
+            $response_plan = json_decode($curl_result);
+            
+            try {
+                $data = [
+                    'xnd_recurring_plan_id' => $response_plan->id,
+                    'xnd_recurring_schedule_id' => $response_plan->schedule->id,
+                    'xnd_recurring_plan_status' => $$response_plan->status,
+                    'xendit_invoice_url' => $response_plan->actions[0]->url,
+                    'xendit_invoice_expired' => date('Y-m-d H:i:s', strtotime($datetimenow. ' + 1 day')),
+                ];
+                InvoicesRecurring::where('invoice_recurring_id', $invoice_recurring_id)->update($data);
+            } catch (\Exception $e) {
+                $success = false;
+                $message = 'Cannot create xendit invoice recurring';
+                $data = ['message'=>$e->getMessage(),'curl_result'=>$curl_result];
+            }
+        } else {
+            $success = false;
+            $message = 'Cannot create invoice recurring';
+        }
+
+        return ['success'=> $success, 'message'=> $message, 'data' => $data];
+    }
 }

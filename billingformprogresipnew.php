@@ -114,6 +114,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <input type="text" class="form-control" id="total_payment_amount_display" name="total_payment_amount_display" readonly />
                         <input type="hidden" id="total_payment_amount" name="total_payment_amount" value="0"/>
                     </div>
+                    <div class="form-group">
+                        <label for="is_recurring">Perpanjang Otomatis</label>
+                        <select class="form-control" id="is_recurring" name="is_recurring" required>
+                            <option value="Y" selected>Yes</option>
+                            <option value="N">No</option>
+                        </select>
+                    </div>
                     <button type="submit" class="btn btn-primary" id="submitTransaction">Submit</button>
                 </div>
             </div>

@@ -20,4 +20,5 @@ Route::post('billing', [BillingController::class, 'ProcessPayment']);
 
 Route::prefix('payment')->group(function () {
     Route::post('/callback', [WebhookController::class, 'CallbackInvoice']);
+    Route::post('/callbackrecurring', [WebhookController::class, 'CallbackInvoiceRecurring']);
 });
