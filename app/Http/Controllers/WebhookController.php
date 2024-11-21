@@ -68,7 +68,7 @@ class WebhookController extends Controller
             //update client subscription status
             if ($status == 'PAID') {
                 $date_paid = strtotime($data['paid_at']);
-                $date_end = strtotime("+" . $invoice->number_of_months . " month", $data['paid_at']);
+                $date_end = strtotime("+" . $invoice->number_of_months . " month",  $date_paid);
                 $subscribed_start = date('Y-m-d H:i:s', $date_paid);
                 $subscribed_end = date('Y-m-d H:i:s', $date_end);
                 $this->UpdateClientSubscription(true, $invoice->client_id, $subscribed_start, $subscribed_end);
