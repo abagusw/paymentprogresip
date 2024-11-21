@@ -285,7 +285,7 @@ class BillingController extends Controller
                     "customer_id" => $client->client_xendit_cusid,
                     "recurring_action" => "PAYMENT",
                     "currency" => "IDR",
-                    "amount" => $invoice_recurring->amount,
+                    "amount" => (double)$invoice_recurring->amount,
                     "payment_methods" => [],
                     "schedule" => [
                       "reference_id" => $invoice_recurring->external_invoice_schedule_id,
@@ -312,7 +312,7 @@ class BillingController extends Controller
                           [
                               "type" => 'DIGITAL_PRODUCT',
                               "name" => 'GROUP - ' . $invoice_recurring->group_id,
-                              "net_unit_amount" => $invoice_recurring->amount,
+                              "net_unit_amount" => (double)$invoice_recurring->amount,
                               "quantity" =>  '1',
                               "url" => $xset["success_redirect_url"],
                               "category" => "Newsletter",
@@ -322,29 +322,30 @@ class BillingController extends Controller
                     "success_return_url" => $xset["success_redirect_url"],
                     "failure_return_url" => $xset["failure_redirect_url"]
                     ];
-            $apiKey = $xset["xendit_secret_key_billing"];
-            $url = "https://api.xendit.co/recurring/plans";
-            $headers = [];
-            $headers[] = "Content-Type: application/json";
-          
-            $curl = curl_init();
 
-            $payload = json_encode($data);
-            curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($curl, CURLOPT_USERPWD, $apiKey.":");
-            curl_setopt($curl, CURLOPT_URL, $url);
-            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $payload);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-          
-            $curl_result = curl_exec($curl);
-            $response_plan = json_decode($curl_result);
-            
             try {
+                $apiKey = $xset["xendit_secret_key_billing"];
+                $url = "https://api.xendit.co/recurring/plans";
+                $headers = [];
+                $headers[] = "Content-Type: application/json";
+            
+                $curl = curl_init();
+
+                $payload = json_encode($data);
+                curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+                curl_setopt($curl, CURLOPT_USERPWD, $apiKey.":");
+                curl_setopt($curl, CURLOPT_URL, $url);
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
+                curl_setopt($curl, CURLOPT_POSTFIELDS, $payload);
+                curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            
+                $curl_result = curl_exec($curl);
+                $response_plan = json_decode($curl_result);
+            
                 $data = [
                     'xnd_recurring_plan_id' => $response_plan->id,
                     'xnd_recurring_schedule_id' => $response_plan->schedule->id,
-                    'xnd_recurring_plan_status' => $$response_plan->status,
+                    'xnd_recurring_plan_status' => $response_plan->status,
                     'xendit_invoice_url' => $response_plan->actions[0]->url,
                     'xendit_invoice_expired' => date('Y-m-d H:i:s', strtotime($datetimenow. ' + 1 day')),
                 ];
