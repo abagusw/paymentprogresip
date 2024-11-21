@@ -313,7 +313,7 @@ class BillingController extends Controller
                               "type" => 'DIGITAL_PRODUCT',
                               "name" => 'GROUP - ' . $invoice_recurring->group_id,
                               "net_unit_amount" => (double)$invoice_recurring->amount,
-                              "quantity" =>  '1',
+                              "quantity" =>  1,
                               "url" => $xset["success_redirect_url"],
                               "category" => "Newsletter",
                               "subcategory" => "Newsletter"
