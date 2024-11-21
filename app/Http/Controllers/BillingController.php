@@ -23,8 +23,8 @@ class BillingController extends Controller
     public function LoadXenditSetting(): array {
         
         $setting_xendit_secret_key_billing = Settings::where('setting_key', 'xnd_api_key_development_billing_api')->first();
-        $setting_xnd_success_redirect_url = Settings::where('setting_key', 'xnd_success_redirect_url_api')->first();
-        $setting_xnd_failure_redirect_url = Settings::where('setting_key', 'xnd_failure_redirect_url_api')->first();
+        $setting_xnd_success_redirect_url = Settings::where('setting_key', 'xnd_success_redirect_url')->first();
+        $setting_xnd_failure_redirect_url = Settings::where('setting_key', 'xnd_failure_redirect_url')->first();
         $xendit_secret_key_billing = $setting_xendit_secret_key_billing->value_text;
         $success_redirect_url = $setting_xnd_success_redirect_url->value_text;
         $failure_redirect_url = $setting_xnd_failure_redirect_url->value_text;
