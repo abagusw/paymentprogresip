@@ -117,8 +117,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div class="form-group">
                         <label for="is_recurring">Perpanjang Otomatis</label>
                         <select class="form-control" id="is_recurring" name="is_recurring" required>
-                            <option value="Y" selected>Yes</option>
-                            <option value="N">No</option>
+                            <option value="Y">Yes</option>
+                            <option value="N" selected>No</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary" id="submitTransaction">Submit</button>
