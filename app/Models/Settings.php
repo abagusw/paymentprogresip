@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Settings extends Model
 {
 
+    protected $table = 'settings';
     //TODO: USE ORIGINAL SETTINGS WHEN TESTING DONE
-    // protected $table = 'settings';
-    protected $table = 'settings_for_testing';
+    // protected $table = 'settings_for_testing';
 }
