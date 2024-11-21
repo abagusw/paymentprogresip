@@ -342,14 +342,14 @@ class BillingController extends Controller
                 $curl_result = curl_exec($curl);
                 $response_plan = json_decode($curl_result);
             
-                $data = [
+                $data_invoice = [
                     'xnd_recurring_plan_id' => $response_plan->id,
                     'xnd_recurring_schedule_id' => $response_plan->schedule->id,
                     'xnd_recurring_plan_status' => $response_plan->status,
                     'xendit_invoice_url' => $response_plan->actions[0]->url,
                     'xendit_invoice_expired' => date('Y-m-d H:i:s', strtotime($datetimenow. ' + 1 day')),
                 ];
-                InvoicesRecurring::where('invoice_recurring_id', $invoice_recurring_id)->update($data);
+                InvoicesRecurring::where('invoice_recurring_id', $invoice_recurring_id)->update($data_invoice);
             } catch (\Exception $e) {
                 $success = false;
                 $message = 'Cannot create xendit invoice recurring';
