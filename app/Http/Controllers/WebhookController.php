@@ -130,7 +130,7 @@ class WebhookController extends Controller
 
                 case 'recurring.cycle.succeeded':
                     $date_paid = strtotime($data['scheduled_timestamp']);
-                    $date_end = strtotime("+" . $invoice_recurring->number_of_months . " month", $data['scheduled_timestamp']);
+                    $date_end = strtotime("+" . $invoice_recurring->number_of_months . " month", $date_paid);
                     $subscribed_start = date('Y-m-d H:i:s', $date_paid);
                     $subscribed_end = date('Y-m-d H:i:s', $date_end);
                     $this->UpdateClientSubscription(true, $invoice_recurring->client_id, $subscribed_start, $subscribed_end);
