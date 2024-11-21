@@ -41,8 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             $message = $response->message;
         }
-    } else {        
-        echo json_encode($response);
+    } else {
         $message = "Pembelian gagal, silahkan hubungi admin!";
     }
 }
