@@ -169,13 +169,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
         var count = 5;
         setInterval(() => {
-            count--;
-            console.log(count);
-            if (count == 0) {
-                window.location.replace('<?php echo $response->data->xendit_invoice_url ?>');
-            }
-            document.getElementById("countdown").innerHTML = count;
-        }, 1000);
+			if (count > 0) {	
+				document.getElementById("countdown").innerHTML = count;	
+				console.log(count);
+				if (count == 1) {
+					window.location.replace('<?php echo $response->data->payment_xendit_url ?>');
+				}			
+				count--;
+			}
+        }, 500);
 <?php 
     }}
 ?>
