@@ -307,7 +307,7 @@ class BillingController extends Controller
                     "failed_cycle_action" => "STOP",
                     "payment_link_for_failed_attempt" => false,
                     "metadata" => null,
-                    "description" => "Kawan M",
+                    "description" => "Sekutu ProgreSIP",
                     "items" => [
                           [
                               "type" => 'DIGITAL_PRODUCT',
