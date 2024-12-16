@@ -196,7 +196,7 @@ class BillingController extends Controller
                             'country' => 'ID',
                             'postal_code' => "Default System",
                             'state' => "Default System",
-                            'street_line1' => "Default System",
+                            'street_line1' => $client->client_address,
                             'street_line2' => "Default System"
                         ]
                     ]
