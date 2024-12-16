@@ -227,6 +227,16 @@ class BillingController extends Controller
                         'viber'
                     ]
                 ],
+				"items" => [
+				    [
+					  "name" => 'GROUP - ' . $invoice->group_id,
+					  "price" => (float) $invoice->amount,
+					  "quantity" =>  1,
+					  "url" => $xset["success_redirect_url"],
+					  "category" => "Newsletter",
+					  "reference_id" => $invoice->external_invoice_id
+				    ]
+			    ],
                 'success_redirect_url' => $xset["success_redirect_url"],
                 'failure_redirect_url' => $xset["failure_redirect_url"],
                 'currency' => 'IDR'
