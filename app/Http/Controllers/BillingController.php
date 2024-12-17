@@ -183,7 +183,7 @@ class BillingController extends Controller
             $params = [ 
                 'external_id' => $invoice->external_invoice_id,
                 'amount' => $invoice->amount,
-                'description' => 'Payment of Invoice '.$invoice->external_invoice_id.' for Progresip ',
+                'description' => 'Customer Address: ' . $client->client_address,
                 'invoice_duration' => 86400,
                 'customer' => [
                     'given_names' => $client->client_name,
